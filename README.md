@@ -1,1 +1,3 @@
-# blackjack
+# Blackjack
+
+Simple blackjack interactive gameplay
