@@ -72,17 +72,19 @@ def get_dealer_hits(hand_player, hand_dealer):
     return dealer_hits
 
 
-def run():
+def single_run():
     hand_player = deal_card() + deal_card()
     hand_dealer = deal_card() + deal_card()
 
     print(f'Dealer Hand: [XXX, {hand_dealer[1:]}')
+    print(f'Player Hand: {hand_player}')
+    bet = int(input('How much do you want to bet?'))
     current_player_decision = 'hit'
     while current_player_decision == 'hit' and score(hand_player) < 21:
-        print(f'Player Hand: {hand_player}')
         current_player_decision = get_player_decision()
         if current_player_decision == 'hit':
             hand_player += deal_card()
+        print(f'Player Hand: {hand_player}')
 
     while get_dealer_hits(hand_player, hand_dealer):
         hand_dealer += deal_card()
@@ -92,7 +94,24 @@ def run():
     print(f'Final Dealer Hand: {hand_dealer}')
     print(f'Dealer Score: {score(hand_dealer)}')
     print(f'Winner is: {calc_winner(hand_player, hand_dealer)}')
+    return calc_winner(hand_player, hand_dealer), bet
+
+def full_game():
+    bank = int(input('How much money do you have?'))
+    keep_playing = True
+    while bank > 0 and keep_playing:
+        winner, bet = single_run()
+        if winner == 'player':
+            bank += bet
+        elif winner == 'dealer':
+            bank -= bet
+        keep_playing_int = int(input(f'Your bank is now {bank}, keep playing? 1: yes, 2: no'))
+        keep_playing = True if keep_playing_int == 1 else False
+
+    return bank
+
 
 if __name__ == '__main__':
-    run()
+    full_game()
 
+#TODO: Add finite cards
