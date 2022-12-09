@@ -1,3 +1,5 @@
+import pandas as pd
+
 from random import choice
 
 
@@ -71,47 +73,35 @@ def get_dealer_hits(hand_player, hand_dealer):
 
     return dealer_hits
 
-
 def single_run():
     hand_player = deal_card() + deal_card()
     hand_dealer = deal_card() + deal_card()
 
-    print(f'Dealer Hand: [XXX, {hand_dealer[1:]}')
-    print(f'Player Hand: {hand_player}')
-    bet = int(input('How much do you want to bet?'))
+    data_dict = {
+        'dealer_score': score(hand_dealer[1]),
+        'player_score': score(hand_player)
+    }
+
     current_player_decision = 'hit'
+    n_hits = 0
     while current_player_decision == 'hit' and score(hand_player) < 21:
-        current_player_decision = get_player_decision()
+        current_player_decision = choice(['hit', 'hit', 'hit', 'hold'])
         if current_player_decision == 'hit':
             hand_player += deal_card()
-        print(f'Player Hand: {hand_player}')
+        n_hits += 1
+
+    data_dict['n_hits'] = n_hits
 
     while get_dealer_hits(hand_player, hand_dealer):
         hand_dealer += deal_card()
 
-    print(f'Final Player Hand: {hand_player}')
-    print(f'Player Score: {score(hand_player)}')
-    print(f'Final Dealer Hand: {hand_dealer}')
-    print(f'Dealer Score: {score(hand_dealer)}')
-    print(f'Winner is: {calc_winner(hand_player, hand_dealer)}')
-    return calc_winner(hand_player, hand_dealer), bet
-
-def full_game():
-    bank = int(input('How much money do you have?'))
-    keep_playing = True
-    while bank > 0 and keep_playing:
-        winner, bet = single_run()
-        if winner == 'player':
-            bank += bet
-        elif winner == 'dealer':
-            bank -= bet
-        keep_playing_int = int(input(f'Your bank is now {bank}, keep playing? 1: yes, 2: no'))
-        keep_playing = True if keep_playing_int == 1 else False
-
-    return bank
-
+    data_dict['success'] = 1 if calc_winner(hand_player, hand_dealer) == 'player' else 0
+    return data_dict
 
 if __name__ == '__main__':
-    full_game()
-
-#TODO: Add finite cards
+    all_results_raw = pd.DataFrame([single_run() for _ in range(int(1e7))])
+    all_results = all_results_raw.groupby(['dealer_score', 'player_score', 'n_hits']).agg(
+        count=('success', 'count'),
+        winner_prop=('success', 'mean'),
+    )
+    all_results = all_results.reset_index()
